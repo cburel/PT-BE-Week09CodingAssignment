@@ -1,9 +1,11 @@
 package projects;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
+import projects.entity.Project;
 import projects.exception.DbException;
 
 public class ProjectsApp {
@@ -12,6 +14,7 @@ public class ProjectsApp {
 	private List<String> operations = List.of("1) Add a project");
 	// @formatter:on
 	private Scanner scanner = new Scanner(System.in);
+	private ProjectService projectService = new ProjectService();
 			
   public static void main(String[] args) {
     // connect to projects schema
@@ -28,6 +31,9 @@ public class ProjectsApp {
 					case -1:
 						done = exitMenu();
 						break;
+					case 1:
+						createProject();
+						break;
 					default:
 						System.out.println("\n" + selection + " is not a valid selection. Try again.");
 						break;
@@ -39,6 +45,24 @@ public class ProjectsApp {
 		}
 	}
 	
+	private void createProject() {
+		String projectName = getStringInput("Enter the project name");
+		BigDecimal estimatedHours = getDecimalInput("Enter the estimated hours");
+		BigDecimal actualHours = getDecimalInput("Enter the actual hours");
+		Integer difficulty = getIntInput("Enter the project difficult (1-5)");
+		String notes = getStringInput("Enter the project notes");
+		Project project = new Project();
+		
+		project.setProjectName(projectName);
+		project.setEstimatedHours(estimatedHours);
+		project.setActualHours(actualHours);
+		project.setDifficulty(difficulty);
+		project.setNotes(notes);
+		
+		Project dbProject = projectService.addProject(project);
+		System.out.println("You have successfully created project: " + dbProject);
+	}
+
 	private boolean exitMenu() {
 		System.out.println("Exiting the menu.");
 		return true;
@@ -68,6 +92,21 @@ public class ProjectsApp {
 		}
 		catch(NumberFormatException e) {
 			throw new DbException(input + "is not a valid number");
+		}
+	}
+	
+	private BigDecimal getDecimalInput(String prompt) {
+		String input = getStringInput(prompt);
+		
+		if (Objects.isNull(input)) {
+			return null;
+		}
+		
+		try {
+			return new BigDecimal(input).setScale(2);
+		}
+		catch(NumberFormatException e) {
+			throw new DbException(input + "is not a valid decimal number");
 		}
 	}
 
